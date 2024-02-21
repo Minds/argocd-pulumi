@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package xyz
+package argocd
 
 import (
 	"fmt"
@@ -28,18 +28,18 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 
 	// Replace this provider with the provider you are bridging.
-	xyz "github.com/iwahbe/terraform-provider-xyz/provider"
+	argocdShim "github.com/oboukili/terraform-provider-argocd/shim"
 
-	"github.com/pulumi/pulumi-xyz/provider/pkg/version"
+	"github.com/minds/argocd-pulumi/provider/pkg/version"
 )
 
 // all of the token components used below.
 const (
 	// This variable controls the default name of the package in the package
 	// registries for nodejs and python:
-	mainPkg = "xyz"
+	mainPkg = "argocd"
 	// modules:
-	mainMod = "index" // the xyz module
+	mainMod = "index" // the argocd module
 )
 
 // preConfigureCallback is called before the providerConfigure function of the underlying provider.
@@ -50,7 +50,7 @@ func preConfigureCallback(resource.PropertyMap, shim.ResourceConfig) error {
 	return nil
 }
 
-//go:embed cmd/pulumi-resource-xyz/bridge-metadata.json
+//go:embed cmd/pulumi-resource-argocd/bridge-metadata.json
 var metadata []byte
 
 // Provider returns additional overlaid schema and metadata associated with the provider..
@@ -58,8 +58,8 @@ func Provider() tfbridge.ProviderInfo {
 	// Create a Pulumi provider mapping
 	prov := tfbridge.ProviderInfo{
 		// Instantiate the Terraform provider
-		P:    shimv2.NewProvider(xyz.New(version.Version)()),
-		Name: "xyz",
+		P:    shimv2.NewProvider(argocdShim.NewProvider()),
+		Name: "argocd",
 		// DisplayName is a way to be able to change the casing of the provider
 		// name when being displayed on the Pulumi registry
 		DisplayName: "",
@@ -67,7 +67,7 @@ func Provider() tfbridge.ProviderInfo {
 		// Change this to your personal name (or a company name) that you
 		// would like to be shown in the Pulumi Registry if this package is published
 		// there.
-		Publisher: "Pulumi",
+		Publisher: "Minds",
 		// LogoURL is optional but useful to help identify your package in the Pulumi Registry
 		// if this package is published there.
 		//
@@ -78,19 +78,14 @@ func Provider() tfbridge.ProviderInfo {
 		// for use in Pulumi programs
 		// e.g https://github.com/org/pulumi-provider-name/releases/
 		PluginDownloadURL: "",
-		Description:       "A Pulumi package for creating and managing xyz cloud resources.",
-		// category/cloud tag helps with categorizing the package in the Pulumi Registry.
-		// For all available categories, see `Keywords` in
-		// https://www.pulumi.com/docs/guides/pulumi-packages/schema/#package.
-		Keywords:   []string{"pulumi", "xyz", "category/cloud"},
-		License:    "Apache-2.0",
-		Homepage:   "https://www.pulumi.com",
-		Repository: "https://github.com/pulumi/pulumi-xyz",
-		// The GitHub Org for the provider - defaults to `terraform-providers`. Note that this
-		// should match the TF provider module's require directive, not any replace directives.
-		GitHubOrg:    "",
-		MetadataInfo: tfbridge.NewProviderMetadata(metadata),
-		Config:       map[string]*tfbridge.SchemaInfo{
+		Description:       "A Pulumi package for creating and managing argocd cloud resources.",
+		Keywords:          []string{"pulumi", "argo-cd", "category/cloud"},
+		License:           "Apache-2.0",
+		Homepage:          "https://www.pulumi.com",
+		Repository:        "https://github.com/minds/argocd-pulumi",
+		GitHubOrg:         "oboukili",
+		MetadataInfo:      tfbridge.NewProviderMetadata(metadata),
+		Config:            map[string]*tfbridge.SchemaInfo{
 			// Add any required configuration here, or remove the example below if
 			// no additional points are required.
 			// "region": {
@@ -101,7 +96,7 @@ func Provider() tfbridge.ProviderInfo {
 			// },
 		},
 		PreConfigureCallback: preConfigureCallback,
-		Resources:            map[string]*tfbridge.ResourceInfo{
+		Resources: map[string]*tfbridge.ResourceInfo{
 			// Map each resource in the Terraform provider to a Pulumi type. Two examples
 			// are below - the single line form is the common case. The multi-line form is
 			// needed only if you wish to override types or other default options.
@@ -114,6 +109,13 @@ func Provider() tfbridge.ProviderInfo {
 			// 		"tags": {Type: tfbridge.MakeType(mainPkg, "Tags")},
 			// 	},
 			// },
+
+			// "argocd_application": {
+			// 	Tok: tfbridge.MakeResource(mainPkg, mainMod, "applicationModel")
+			// }
+
+			"argocd_application": {Tok: tfbridge.MakeResource(mainPkg, mainMod, "Application")},
+			"argocd_project":     {Tok: tfbridge.MakeResource(mainPkg, mainMod, "Project")},
 		},
 		DataSources: map[string]*tfbridge.DataSourceInfo{
 			// Map each resource in the Terraform provider to a Pulumi function. An example
@@ -121,7 +123,7 @@ func Provider() tfbridge.ProviderInfo {
 			// "aws_ami": {Tok: tfbridge.MakeDataSource(mainPkg, mainMod, "getAmi")},
 		},
 		JavaScript: &tfbridge.JavaScriptInfo{
-			// List any npm dependencies and their versions
+			PackageName: "@mindsorg/argocd-pulumi",
 			Dependencies: map[string]string{
 				"@pulumi/pulumi": "^3.0.0",
 			},
@@ -160,7 +162,7 @@ func Provider() tfbridge.ProviderInfo {
 	// tokens, and apply auto aliasing for full backwards compatibility.  For more
 	// information, please reference:
 	// https://pkg.go.dev/github.com/pulumi/pulumi-terraform-bridge/v3/pkg/tfbridge#ProviderInfo.ComputeTokens
-	prov.MustComputeTokens(tokens.SingleModule("xyz_", mainMod,
+	prov.MustComputeTokens(tokens.SingleModule("argocd_", mainMod,
 		tokens.MakeStandard(mainPkg)))
 	prov.MustApplyAutoAliases()
 	prov.SetAutonaming(255, "-")

@@ -1,9 +1,9 @@
 PROJECT_NAME := xyz Package
 
 SHELL            := /bin/bash
-PACK             := xyz
-ORG              := pulumi
-PROJECT          := github.com/${ORG}/pulumi-${PACK}
+PACK             := argocd
+ORG              := minds
+PROJECT          := github.com/${ORG}/${PACK}-pulumi
 NODE_MODULE_NAME := @pulumi/${PACK}
 TF_NAME          := ${PACK}
 PROVIDER_PATH    := provider
